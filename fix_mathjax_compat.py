@@ -110,13 +110,12 @@ def fix_math_content(s: str) -> str:
 # Inline math handling
 # ------------------------------------------------------------
 
-INLINE_MATH_RE = re.compile(r":math:`([^`]*)`")
+INLINE_MATH_RE = re.compile(r":math:`(.*?)`", re.DOTALL)
 
-
-def fix_inline_math(line: str) -> str:
+def fix_inline_math_global(text: str) -> str:
     def repl(m):
         return f":math:`{fix_math_content(m.group(1))}`"
-    return INLINE_MATH_RE.sub(repl, line)
+    return INLINE_MATH_RE.sub(repl, text)
 
 
 # ------------------------------------------------------------
@@ -129,10 +128,10 @@ def process_file(lines):
     n = len(lines)
 
     while i < n:
-        line = fix_inline_math(lines[i])
+        line = lines[i]
 
         if line.lstrip().startswith(".. math::"):
-            out.append(line)
+            out.append(fix_math_content(line))
             i += 1
 
             while i < n:
@@ -162,8 +161,15 @@ def process_file(lines):
 
 def main(path):
     path = Path(path)
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    text = path.read_text(encoding="utf-8")
+
+    # ✅ Fix multiline inline math first
+    text = fix_inline_math_global(text)
+
+    # Then process display math
+    lines = text.splitlines(keepends=True)
     fixed = process_file(lines)
+
     path.write_text("".join(fixed), encoding="utf-8")
 
 
