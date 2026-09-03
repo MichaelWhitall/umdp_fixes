@@ -237,39 +237,35 @@ def bibtex_to_rst(entries, macros, used_keys, label_map):
 # ------------------------------------------------------------
 
 def fix_citations(text):
-    # unwrap raw-latex
-    text = re.sub(
-        r":raw-latex:`\\cite[a-z]*(?:\[[^]]*\])?\{([^}]+)\}`",
-        r"\\cite{\1}",
-        text,
-    )
-
     def cite_block(keys):
         return ", ".join(f"`{k.strip().lower()}`_" for k in keys.split(","))
 
-    # handle cite, citep, citealp, citet, etc.
+    def repl(m):
+        note1 = m.group(1)  # first [...]
+        note2 = m.group(2)  # second [...]
+        keys = cite_block(m.group(3))
+
+        if note1 is None and note2 is None:
+            # \cite{key}
+            return keys
+
+        note = note1 or note2 or ""
+
+        if note == "":
+            # \cite[]{key} or \cite[][]{key}
+            return f"[{keys}]"
+
+        # \cite[text]{key} or \cite[text][]{key}
+        sep = "" if note.endswith((" ", "~")) else " "
+        return f"[{note}{sep}{keys}]"
+
     text = re.sub(
-        r"\\cite[a-z]*(?:\[[^]]*\])?\{([^}]+)\}",
-        lambda m: cite_block(m.group(1)),
+        r"(?:\:raw-latex:`)?\\cite[a-z]*(?:\[([^]]*)\])?(?:\[([^]]*)\])?\{([^}]+)\}`?",
+        repl,
         text,
     )
 
     return text
-
-#def fix_citations(text):
-#    text = re.sub(
-#        r":raw-latex:`\\cite[t|p]?\{([^}]+)\}`",
-#        r"\\cite{\1}",
-#        text,
-#    )
-
-#    def cite_block(keys):
-#        return ", ".join(f"`{k.strip().lower()}`_" for k in keys.split(","))
-
-#    text = re.sub(r"\\citep\{([^}]+)\}", lambda m: cite_block(m.group(1)), text)
-#    text = re.sub(r"\\cite\{([^}]+)\}", lambda m: cite_block(m.group(1)), text)
-
-#    return text
 
 
 # ------------------------------------------------------------
