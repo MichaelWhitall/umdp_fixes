@@ -239,7 +239,7 @@ def bibtex_to_rst(entries, macros, used_keys, label_map):
 def fix_citations(text):
     # unwrap raw-latex
     text = re.sub(
-        r":raw-latex:`\\cite[a-z]*\{([^}]+)\}`",
+        r":raw-latex:`\\cite[a-z]*(?:\[[^]]*\])?\{([^}]+)\}`",
         r"\\cite{\1}",
         text,
     )
@@ -249,7 +249,7 @@ def fix_citations(text):
 
     # handle cite, citep, citealp, citet, etc.
     text = re.sub(
-        r"\\cite[a-z]*\{([^}]+)\}",
+        r"\\cite[a-z]*(?:\[[^]]*\])?\{([^}]+)\}",
         lambda m: cite_block(m.group(1)),
         text,
     )
