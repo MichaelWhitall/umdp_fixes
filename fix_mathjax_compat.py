@@ -58,6 +58,34 @@ def remove_ensuremath(s):
             i += 1
     return out
 
+def replace_mbox(s):
+    while True:
+        start = s.find(r"\mbox{")
+        if start == -1:
+            break
+
+        i = start + len(r"\mbox{")
+        depth = 1
+
+        while i < len(s) and depth:
+            if s[i] == "{":
+                depth += 1
+            elif s[i] == "}":
+                depth -= 1
+            i += 1
+
+        if depth:
+            break  # unmatched brace
+
+        content = s[start + len(r"\mbox{"):i - 1]
+        s = (
+            s[:start]
+            + r"\mathrm{" + content + "}"
+            + s[i:]
+        )
+
+    return s
+
 
 # ------------------------------------------------------------
 # Font command replacements
@@ -90,18 +118,12 @@ def fix_font_commands(s):
 
 TINY_RE = re.compile(r"\\tiny\b")
 NOINDENT_RE = re.compile(r"\\noindent\b")
-MBOX_RE = re.compile(r"\\mbox\s*\{([^{}]*)\}")
-
 
 def fix_math_content(s: str) -> str:
     s = TINY_RE.sub("", s)
     s = NOINDENT_RE.sub("", s)
     s = remove_ensuremath(s)
-
-    # \mbox{X} -> \mathrm{X}
-    while MBOX_RE.search(s):
-        s = MBOX_RE.sub(r"\\mathrm{\1}", s)
-
+    s = replace_mbox(s)
     s = fix_font_commands(s)
     return s
 

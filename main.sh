@@ -60,9 +60,7 @@ echo "Fixing author affiliations notes."
 python $SCRIPT_DIR/reinstate_author_affiliations.py $1
 
 echo "Converting non-ASCII characters."
-# sed -i 's/\xC2\xA0/ /g' $1
-iconv -f UTF-8 -t ASCII//TRANSLIT $1 > tmp.rst
-mv tmp.rst $1
+python $SCRIPT_DIR/asciify.py $1
 
 echo "Removing trailing whitespace"
 python $SCRIPT_DIR/remove_trailing_whitespace.py $1
